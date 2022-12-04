@@ -12,6 +12,7 @@ import RNPermissions, {NotificationOption, Permission, PERMISSIONS} from 'react-
 import {requestLocationPermission, getLocation} from './LocationUtils';
 import Geolocation from 'react-native-geolocation-service';
 import { Marker } from 'react-native-maps';
+import { getVehicles } from './api';
 
 const App = () => {
 
@@ -39,32 +40,51 @@ const App = () => {
             },
             {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000}
         );
+
+        fetch('http://localhost:3000/vehicles')
+            .then((response) => response.json())
+            .then((json) => {
+                setVehicles(json);
+            }
+        )
+        .catch((error) => console.error(error));
+
     }, []);
 
-    const [location, setLocation] = useState({});
+    const [location, setLocation] = useState({
+        latitude: 0,
+        longitude: 0,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+    });
+    const [vehicles, setVehicles] = useState([]);
 
     const mapRef = useRef<MapView>(null);
-    
+
+    const vehicleMarkers = vehicles.map((vehicle: any) => {
+        return (
+            <Marker
+                key={vehicle.vehicleID}
+                coordinate={{latitude: vehicle.longitude, longitude: vehicle.longitude}}
+                title={vehicle.routeNumber.toString()}
+                description={vehicle.signMessageLong}
+            />
+        );
+    });
+
     return (
         <MapView
             ref={mapRef}
             style={{flex: 1}}
             region={{
-                latitude: 45.452493,
-                longitude: -122.745651,
-                latitudeDelta: 0.0922,
-                longitudeDelta: 0.0421,
+                latitude: location.latitude,
+                longitude: location.longitude,
+                latitudeDelta: location.latitudeDelta,
+                longitudeDelta: location.longitudeDelta,
             }}
         >
+            {vehicleMarkers}
 
-            <Marker
-                coordinate={{
-                    latitude: 45.452493,
-                    longitude: -122.745651,
-                }}
-                title="Test"
-                description="Test"
-            />
         </MapView>
     );
     

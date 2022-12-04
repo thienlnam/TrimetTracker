@@ -9,7 +9,6 @@ export const requestLocationPermission = async () => {
 }
 
 export const getLocation = () => {
-    
     let position = {};
     Geolocation.getCurrentPosition(
         (position) => {
