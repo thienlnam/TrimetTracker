@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import {
     Platform,
     StyleSheet,
@@ -11,6 +11,7 @@ import MapView from 'react-native-maps';
 import RNPermissions, {NotificationOption, Permission, PERMISSIONS} from 'react-native-permissions';
 import {requestLocationPermission, getLocation} from './LocationUtils';
 import Geolocation from 'react-native-geolocation-service';
+import { Marker } from 'react-native-maps';
 
 const App = () => {
 
@@ -18,7 +19,20 @@ const App = () => {
         requestLocationPermission();
         Geolocation.getCurrentPosition(
             (position) => {
-                setLocation(position);
+                // Add in custom position for a random portland address right now since it seems to be taking simulator location from SF
+                const region = {
+                    //latitude: position.coords.latitude,
+                    //longitude: position.coords.longitude,
+                    latitude: 45.452493,
+                    longitude: -122.745651,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                };
+                setLocation(region);
+                if (mapRef.current) {
+                    mapRef.current.animateToRegion(region, 1000);
+                }
+
             },
             (error) => {
                 console.log(error.code, error.message);
@@ -27,34 +41,33 @@ const App = () => {
         );
     }, []);
 
-    const [location, setLocation] = useState({
-        coords: {
-            latitude: 0,
-            longitude: 0,
-        },
-    });
+    const [location, setLocation] = useState({});
 
+    const mapRef = useRef<MapView>(null);
+    
+    return (
+        <MapView
+            ref={mapRef}
+            style={{flex: 1}}
+            region={{
+                latitude: 45.452493,
+                longitude: -122.745651,
+                latitudeDelta: 0.0922,
+                longitudeDelta: 0.0421,
+            }}
+        >
 
-    if (location.coords.latitude === 0 || location.coords.longitude === 0) {
-        return (
-            <View>
-                <Text>Loading...</Text>
-            </View>
-        );
-    } else {
-        console.log('What are the coordinates', location.coords);
-        return (
-            <MapView
-                style={{flex: 1}}
-                region={{
-                    latitude: location.coords.latitude,
-                    longitude: location.coords.longitude,
-                    latitudeDelta: 0.0922,
-                    longitudeDelta: 0.0421,
+            <Marker
+                coordinate={{
+                    latitude: 45.452493,
+                    longitude: -122.745651,
                 }}
+                title="Test"
+                description="Test"
             />
-      );
-    }
+        </MapView>
+    );
+    
 
 };
 

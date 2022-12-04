@@ -4,7 +4,7 @@ import Geolocation from 'react-native-geolocation-service';
 
 export const requestLocationPermission = async () => {
     request(PERMISSIONS.IOS.LOCATION_ALWAYS).then((result) => {
-        console.log('What is result', result);
+        console.log(result);
     });
 }
 
