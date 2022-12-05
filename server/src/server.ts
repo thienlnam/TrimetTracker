@@ -4,7 +4,7 @@ dotenv.config({path: '../.env'});
 import express from 'express'
 import bodyParser from 'body-parser';
 import cors from 'cors';
-import { getVehicles } from './trimet'
+import { getVehicles, getStops } from './trimet'
 
 
 
@@ -36,6 +36,12 @@ app.get('/', (req, res) => {
 app.get('/vehicles', async (req, res) => {
     const vehicles = await getVehicles();
     res.json(vehicles);
+});
+
+app.get('/stops', async (req, res) => {
+    console.log('Getting stops');
+    const stops = await getStops();
+    res.json(stops);
 });
 
 app.listen(port, () => console.log(`Hello world app listening on port ${port}!`))

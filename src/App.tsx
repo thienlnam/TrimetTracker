@@ -61,17 +61,6 @@ const App = () => {
 
     const mapRef = useRef<MapView>(null);
 
-    const vehicleMarkers = vehicles.map((vehicle: any) => {
-        return (
-            <Marker
-                key={vehicle.vehicleID}
-                coordinate={{latitude: vehicle.longitude, longitude: vehicle.longitude}}
-                title={vehicle.routeNumber.toString()}
-                description={vehicle.signMessageLong}
-            />
-        );
-    });
-
     return (
         <MapView
             ref={mapRef}
@@ -83,7 +72,16 @@ const App = () => {
                 longitudeDelta: location.longitudeDelta,
             }}
         >
-            {vehicleMarkers}
+            {vehicles.map((vehicle: any) => {
+                return (
+                    <Marker
+                        key={vehicle.vehicleID}
+                        coordinate={{latitude: vehicle.latitude, longitude: vehicle.longitude}}
+                        title={vehicle.routeNumber.toString()}
+                        description={vehicle.signMessageLong}
+                    />
+                );
+            })}
 
         </MapView>
     );
