@@ -13,6 +13,7 @@ import {requestLocationPermission, getLocation} from './LocationUtils';
 import Geolocation from 'react-native-geolocation-service';
 import { Marker } from 'react-native-maps';
 import { getVehicles } from './api';
+import { TrimetVehicle, Region, TrimetStop } from './types';
 
 const App = () => {
 
@@ -49,6 +50,14 @@ const App = () => {
         )
         .catch((error) => console.error(error));
 
+        fetch('http://localhost:3000/stops')
+            .then((response) => response.json())
+            .then((json) => {
+                setStops(json);
+            }
+        )
+        .catch((error) => console.error(error));
+
     }, []);
 
     const [location, setLocation] = useState({
@@ -57,7 +66,13 @@ const App = () => {
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
     });
+
     const [vehicles, setVehicles] = useState([]);
+    const [stops, setStops] = useState([]);
+
+    const onRegionChangeComplete = (region: Region) => {
+        console.log(region);
+    };
 
     const mapRef = useRef<MapView>(null);
 
@@ -71,14 +86,30 @@ const App = () => {
                 latitudeDelta: location.latitudeDelta,
                 longitudeDelta: location.longitudeDelta,
             }}
+            onRegionChangeComplete={onRegionChangeComplete}
         >
-            {vehicles.map((vehicle: any) => {
+            {vehicles.map((vehicle: TrimetVehicle) => {
                 return (
                     <Marker
                         key={vehicle.vehicleID}
                         coordinate={{latitude: vehicle.latitude, longitude: vehicle.longitude}}
                         title={vehicle.routeNumber.toString()}
                         description={vehicle.signMessageLong}
+                    />
+                );
+            })}
+
+            {stops.map((stop: TrimetStop) => {
+                if (!stop.stop_lat || !stop.stop_lon) {
+                    console.log('stop missing lat/lon', stop);
+                }
+
+                return (
+                    <Marker
+                        key={stop.stop_id}
+                        coordinate={{latitude: stop.stop_lat, longitude: stop.stop_lon}}
+                        title={stop.stop_name}
+                        description={stop.stop_desc}
                     />
                 );
             })}
