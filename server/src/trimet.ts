@@ -23,6 +23,7 @@ export const getStops = async () => {
     
             const stopsData = stops.map(stop => {
                 // Some of the stop descriptions have commas in them, so this regex will split the string on commas, but only if they are not inside of quotes
+                // https://stackoverflow.com/a/53774647
                 const stopData = stop.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
 
                 // If the stopdata[0] contains landmarks, we want to remove them from the stop data for now

@@ -10,10 +10,12 @@ import {
 import MapView from 'react-native-maps';
 import RNPermissions, {NotificationOption, Permission, PERMISSIONS} from 'react-native-permissions';
 import {requestLocationPermission, getLocation} from './LocationUtils';
-import Geolocation from 'react-native-geolocation-service';
 import { Marker } from 'react-native-maps';
-import { getVehicles } from './api';
-import { TrimetVehicle, Region, TrimetStop } from './types';
+import { TrimetVehicle, Region, TrimetStop } from './types/types';
+import DestinationSearch from './components/DestinationSearch';
+import Geolocation from '@react-native-community/geolocation';
+
+
 
 const App = () => {
 
@@ -21,25 +23,21 @@ const App = () => {
         requestLocationPermission();
         Geolocation.getCurrentPosition(
             (position) => {
-                // Add in custom position for a random portland address right now since it seems to be taking simulator location from SF
-                const region = {
-                    //latitude: position.coords.latitude,
-                    //longitude: position.coords.longitude,
-                    latitude: 45.452493,
-                    longitude: -122.745651,
-                    latitudeDelta: 0.01,
-                    longitudeDelta: 0.01,
-                };
-                setLocation(region);
-                if (mapRef.current) {
-                    mapRef.current.animateToRegion(region, 1000);
-                }
-
+              const region = {
+                  //latitude: position.coords.latitude,
+                  //longitude: position.coords.longitude,
+                  latitude: 45.452493,
+                  longitude: -122.745651,
+                  latitudeDelta: 0.01,
+                  longitudeDelta: 0.01,
+              };
+              setLocation(region);
+              if (mapRef.current) {
+                  mapRef.current.animateToRegion(region, 1000);
+              }
             },
-            (error) => {
-                console.log(error.code, error.message);
-            },
-            {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000}
+            (error) => console.error(error),
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
         );
 
         fetch('http://localhost:3000/vehicles')
@@ -61,60 +59,69 @@ const App = () => {
     }, []);
 
     const [location, setLocation] = useState({
-        latitude: 0,
-        longitude: 0,
+        latitude: 45,
+        longitude: -122,
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
     });
 
+    const [desiredDestination, setDesiredDestination] = useState('');
+
     const [vehicles, setVehicles] = useState([]);
     const [stops, setStops] = useState([]);
 
-    const onRegionChangeComplete = (region: Region) => {
+    const onRegionChange = (region: Region) => {
         console.log(region);
     };
 
     const mapRef = useRef<MapView>(null);
 
+    const vehicleMarkers = vehicles.map((vehicle: TrimetVehicle) => {
+        return (
+            <Marker
+                key={vehicle.vehicleID}
+                coordinate={{latitude: vehicle.latitude, longitude: vehicle.longitude}}
+                title={vehicle.routeNumber.toString()}
+                description={vehicle.signMessageLong}
+            />
+        );
+    });
+
+    const stopMarkers = stops.map((stop: TrimetStop) => {
+        return (
+            <Marker
+                key={stop.stop_id}
+                coordinate={{latitude: stop.stop_lat, longitude: stop.stop_lon}}
+                title={stop.stop_name}
+                description={stop.stop_desc}
+            />
+        );
+    });
+
     return (
-        <MapView
-            ref={mapRef}
-            style={{flex: 1}}
-            region={{
-                latitude: location.latitude,
-                longitude: location.longitude,
-                latitudeDelta: location.latitudeDelta,
-                longitudeDelta: location.longitudeDelta,
-            }}
-            onRegionChangeComplete={onRegionChangeComplete}
-        >
-            {vehicles.map((vehicle: TrimetVehicle) => {
-                return (
-                    <Marker
-                        key={vehicle.vehicleID}
-                        coordinate={{latitude: vehicle.latitude, longitude: vehicle.longitude}}
-                        title={vehicle.routeNumber.toString()}
-                        description={vehicle.signMessageLong}
-                    />
-                );
-            })}
+        <View style={StyleSheet.absoluteFillObject}>
+            <MapView
+                ref={mapRef}
+                style={StyleSheet.absoluteFillObject}
+                region={{
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    latitudeDelta: location.latitudeDelta,
+                    longitudeDelta: location.longitudeDelta,
+                }}
+                showsUserLocation={true}
+                followsUserLocation={true}
+                onRegionChangeComplete={onRegionChange}
+            >
 
-            {stops.map((stop: TrimetStop) => {
-                if (!stop.stop_lat || !stop.stop_lon) {
-                    console.log('stop missing lat/lon', stop);
-                }
-
-                return (
-                    <Marker
-                        key={stop.stop_id}
-                        coordinate={{latitude: stop.stop_lat, longitude: stop.stop_lon}}
-                        title={stop.stop_name}
-                        description={stop.stop_desc}
-                    />
-                );
-            })}
-
-        </MapView>
+              
+            </MapView>
+            <View style={{ position: 'absolute', top: 50, left: 0, right: 0, width: '100%' }}>
+                <DestinationSearch 
+                    onDestinationSelected={setDesiredDestination}
+                />
+            </View>
+        </View>
     );
     
 
